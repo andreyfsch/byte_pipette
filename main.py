@@ -3,17 +3,79 @@ from xml_handling import UniprotXMLHandler
 from ete3 import NCBITaxa
 import db_handling
 import alignment
-
+import operator
+import numpy as np
+import os
+import sys
 
 #Accession.download_uniprot_xml()
 
 # uniprotHandler = UniprotXMLHandler(iterate=True)
 
-# ncbi = NCBITaxa()
+ncbi = NCBITaxa()
 
 align = alignment.Alignment()
 
 protDB = db_handling.ProteinDatabase()
+
+filtering_states = protDB.get_filtering_states()
+
+for state in filtering_states:
+        current_state = protDB.get_current_state()
+        rank = state[0]
+        if rank == current_state[0]:
+                if current_state[2]:
+                        if not current_state[4]:
+                                align.iterate_ellection_taxon_rank_representatives(taxon_rank=rank, current_state=current_state)
+
+                                protDB.set_next_filtering_state()
+
+                                protDB.update_state({'classifications_done': 1, 'current_task':0},rank)
+                        else:
+                                protDB.set_next_filtering_state()
+                else:
+                        align.compare_sequences_same_taxon_level(taxon_rank=rank, current_state=current_state)
+
+                        align.iterate_ellection_taxon_rank_representatives(taxon_rank=rank, current_state=current_state)
+
+                        protDB.set_next_filtering_state()
+
+                        protDB.update_state({'classifications_done': 1, 'current_task':0},rank)
+
+
+
+# rank_list = protDB.get_rank_list('genus')
+
+# print(len(rank_list))
+
+# align.assign_gen_ranks(representative_entries)
+
+# seqs = protDB.get_sequences_same_taxon()
+
+
+# align_list = protDB.get_comparisons_same_taxon(leaf=False)
+
+# align.ellect_representative_entries_by_rank(align_list)
+
+
+#protDB.assign_identity_paramters_comparisons()
+
+# entries_same_taxon_repres = protDB.get_sequences_same_repres()
+
+# align.compare_sequences_taxon_rank(entries_same_taxon_repres, rank='genus')
+
+# align_list = protDB.get_comparisons_same_taxon(leaf=False)
+
+# align.ellect_representative_entries_by_rank(align_list, rank='genus')
+
+# align.assign_rank_representation(rank='genus')
+
+# align.correct_erroneous_repres_of_taxon_instances()
+
+
+# protDB.set_sequences_values()
+
+# protDB.fix_sequences_multiple_repres()
 
 # acc = Accession()
 
@@ -21,8 +83,8 @@ protDB = db_handling.ProteinDatabase()
 
 # protDB.fix_sequences_multiple_repres()
 
-repres_seqs = protDB.get_sequences_same_taxon()
-align.compare_sequences_same_entry(repres_seqs)
+
+# align.compare_sequences_same_entry(repres_seqs)
 
 
 # for entry, data in uniprotHandler.entries:
